@@ -46,7 +46,6 @@ class SettingsPage
         $prompt = esc_textarea($settings['custom_instructions'] ?? '');
         $tone = esc_attr($settings['tone'] ?? $defaults['tone']);
         $maxWords = (int) ($settings['max_words'] ?? $defaults['max_words']);
-        $visionEnabled = !empty($settings['vision_enabled']);
         $visionMode = esc_attr($settings['vision_mode'] ?? $defaults['vision_mode']);
         $forceVerbatim = !empty($settings['force_verbatim_text']);
 
@@ -88,8 +87,7 @@ class SettingsPage
                         <tr>
                             <th scope="row"><?php esc_html_e('Vision', 'media-alt-suggester'); ?></th>
                             <td>
-                                <label><input type="checkbox" name="vision_enabled" value="1" <?php checked($visionEnabled); ?> /> <?php esc_html_e('Enable sending the image to the model (vision).', 'media-alt-suggester'); ?></label>
-                                <p class="description"><?php esc_html_e('Use base64 for local/private testing, auto/url for production.', 'media-alt-suggester'); ?></p>
+                                <p class="description"><?php esc_html_e('Vision is always enabled. Choose how to send the image to the model.', 'media-alt-suggester'); ?></p>
                                 <select name="vision_mode">
                                     <?php foreach (['auto', 'url', 'base64'] as $mode): ?>
                                         <option value="<?php echo esc_attr($mode); ?>" <?php selected($visionMode, $mode); ?>><?php echo esc_html(ucfirst($mode)); ?></option>
@@ -139,7 +137,6 @@ class SettingsPage
             'tone' => sanitize_text_field($_POST['tone'] ?? $defaults['tone']),
             'max_words' => $maxWords,
             'force_verbatim_text' => !empty($_POST['force_verbatim_text']),
-            'vision_enabled' => !empty($_POST['vision_enabled']),
             'vision_mode' => $visionMode,
         ];
 
@@ -172,7 +169,6 @@ class SettingsPage
             'tone' => 'neutral and descriptive',
             'max_words' => 20,
             'force_verbatim_text' => false,
-            'vision_enabled' => false,
             'vision_mode' => 'auto',
         ];
     }

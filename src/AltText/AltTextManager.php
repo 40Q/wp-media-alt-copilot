@@ -111,10 +111,7 @@ class AltTextManager
 
     protected function resolveImageSource(array $context): ?array
     {
-        $vision = $this->config['vision'] ?? [];
-        if (empty($vision['enabled'])) {
-            return null;
-        }
+        $vision = $this->config['vision'] ?? ['enabled' => true];
 
         $mode = $vision['mode'] ?? 'auto';
         $urls = $this->candidateUrls($context, $vision);
@@ -122,6 +119,11 @@ class AltTextManager
         $maxBytes = (int) ($vision['max_base64_bytes'] ?? 1500000);
 
         $canUseUrl = function (string $url) use ($vision): bool {
+            $parts = wp_parse_url($url);
+            if (!empty($parts['host']) && $this->isLocalHost($parts['host'])) {
+                return false;
+            }
+
             if (empty($vision['check_url'])) {
                 return true;
             }
@@ -202,5 +204,22 @@ class AltTextManager
         $path = $parts['path'] ?? '';
         $query = isset($parts['query']) ? '?' . $parts['query'] : '';
         return sprintf('%s://%s%s%s', $scheme, $parts['host'], $path, $query);
+    }
+
+    protected function isLocalHost(string $host): bool
+    {
+        if ($host === 'localhost' || str_ends_with($host, '.local') || str_ends_with($host, '.test')) {
+            return true;
+        }
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            // Private or loopback ranges.
+            return str_starts_with($host, '10.')
+                || str_starts_with($host, '192.168.')
+                || str_starts_with($host, '127.')
+                || str_starts_with($host, '172.') && ($octet = (int) explode('.', $host)[1] ?? 0) >= 16 && $octet <= 31;
+        }
+
+        return false;
     }
 }

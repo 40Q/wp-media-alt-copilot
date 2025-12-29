@@ -38,7 +38,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_MODEL=claude-3-5-sonnet-latest
 ```
 
-Config (`config/media-alt.php`) allows per-provider endpoints, models, and token budgets. `prompt.max_words` and `prompt.tone` control prompt guidance.
+Config (`config/media-alt.php`) allows per-provider endpoints, models, and token budgets. `prompt.max_words` and `prompt.tone` control prompt guidance. Vision is always on; mode decides how the image is sent (auto/url/base64) with automatic base64 fallback for local/private URLs.
 
 Admin screen: settings live under Autonomy AI → Alt Text Copilot (hub required; standalone menu is not shown).
 
@@ -55,5 +55,5 @@ Admin screen: settings live under Autonomy AI → Alt Text Copilot (hub required
 
 - Add new providers by extending `BaseClient` and registering the driver name in `AiClientFactory`.
 - Hook `media_alt_suggester_generation_failed` to capture failures or send logs.
-- Vision support (optional, disabled by default): set `MEDIA_ALT_VISION=true` and choose `MEDIA_ALT_VISION_MODE=auto|url|base64`. Auto tries the URL first and falls back to base64 within `MEDIA_ALT_MAX_BASE64_BYTES` (default ~1.5MB). Base64 is useful for local/private media; URL is leaner for production.
-- Advanced (opt-in): if local URLs aren’t public, you can set `MEDIA_ALT_PUBLIC_HOST` (and `MEDIA_ALT_PUBLIC_SCHEME`) to rewrite to a public host, and `MEDIA_ALT_CHECK_URL=true` to HEAD-check before use. Leave these unset/false unless you need them.
+- Vision is always enabled. Choose `MEDIA_ALT_VISION_MODE=auto|url|base64` (auto by default). Auto tries URL then falls back to base64 within `MEDIA_ALT_MAX_BASE64_BYTES` (default ~1.5MB). Base64 is useful for local/private media; URL is leaner for production when public.
+- If local URLs aren’t public, you can set `MEDIA_ALT_PUBLIC_HOST` (and `MEDIA_ALT_PUBLIC_SCHEME`) to rewrite to a public host. `MEDIA_ALT_CHECK_URL` is on by default to avoid broken URLs and trigger base64 fallback.

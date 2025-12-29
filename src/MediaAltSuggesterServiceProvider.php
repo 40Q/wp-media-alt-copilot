@@ -15,6 +15,7 @@ class MediaAltSuggesterServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/media-alt.php', 'media-alt');
+        $this->applyHubAiConfig();
         $this->applySettingsOverrides();
 
         $this->app->singleton(AiClientFactory::class, function (Container $app) {
@@ -57,6 +58,45 @@ class MediaAltSuggesterServiceProvider extends ServiceProvider
             add_action('admin_menu', [$this, 'removeHubDuplicateMenu'], 25);
             add_action('admin_menu', [$this, 'hideSettingsEntry'], 99);
         }
+    }
+
+    /**
+     * Align provider credentials with the Autonomy AI hub so all packages share the same key/model.
+     */
+    protected function applyHubAiConfig(): void
+    {
+        if (!class_exists('FortyQ\\AutonomyAiHub\\AutonomyAiServiceProvider', false)) {
+            return;
+        }
+
+        $config = $this->app->make('config');
+        $hub = $config->get('autonomy-ai', []);
+
+        // Merge overrides similar to the hub's effectiveConfig logic.
+        $overrides = get_option('autonomy_ai_overrides', []);
+        $ai = $hub['ai'] ?? [];
+        if (isset($overrides['ai']) && is_array($overrides['ai'])) {
+            $ai = array_merge($ai, array_filter($overrides['ai'], static fn ($v) => $v !== null));
+
+            foreach (['openai', 'anthropic'] as $provider) {
+                if (isset($overrides['ai'][$provider])) {
+                    $ai[$provider] = array_merge(
+                        $ai[$provider] ?? [],
+                        array_filter($overrides['ai'][$provider], static fn ($v) => $v !== null)
+                    );
+                }
+            }
+        }
+
+        $defaultModel = $ai['default_model'] ?? 'openai';
+        $openAi = $ai['openai'] ?? [];
+        $anthropic = $ai['anthropic'] ?? [];
+
+        $config->set('media-alt.default_provider', $defaultModel === 'anthropic' ? 'anthropic' : 'openai');
+        $config->set('media-alt.providers.openai.api_key', $openAi['api_key'] ?? $config->get('media-alt.providers.openai.api_key'));
+        $config->set('media-alt.providers.openai.model', $openAi['model'] ?? $config->get('media-alt.providers.openai.model'));
+        $config->set('media-alt.providers.anthropic.api_key', $anthropic['api_key'] ?? $config->get('media-alt.providers.anthropic.api_key'));
+        $config->set('media-alt.providers.anthropic.model', $anthropic['model'] ?? $config->get('media-alt.providers.anthropic.model'));
     }
 
     public function registerRoutes(): void
@@ -254,14 +294,14 @@ class MediaAltSuggesterServiceProvider extends ServiceProvider
 
         $config->set('media-alt.prompt', $prompt);
 
-        if (!$this->envDefined('MEDIA_ALT_VISION') && array_key_exists('vision_enabled', $settings)) {
-            $vision = $config->get('media-alt.vision', []);
-            $vision['enabled'] = (bool) $settings['vision_enabled'];
-            if (!$this->envDefined('MEDIA_ALT_VISION_MODE') && !empty($settings['vision_mode'])) {
-                $vision['mode'] = $settings['vision_mode'];
-            }
-            $config->set('media-alt.vision', $vision);
+        $vision = $config->get('media-alt.vision', ['enabled' => true]);
+        $vision['enabled'] = true; // Always on.
+        if (!$this->envDefined('MEDIA_ALT_VISION_MODE') && !empty($settings['vision_mode'])) {
+            $vision['mode'] = $settings['vision_mode'];
         }
+        // Enforce base64 fallback when URLs are local/private.
+        $vision['check_url'] = true;
+        $config->set('media-alt.vision', $vision);
     }
 
     public function enqueueAdminAssets(): void

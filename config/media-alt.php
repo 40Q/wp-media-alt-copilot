@@ -15,7 +15,7 @@ return [
     ],
 
     'vision' => [
-        'enabled' => env('MEDIA_ALT_VISION', false),
+        'enabled' => true,
         // Modes: auto (try URL then base64), url (prefer URL), base64 (prefer base64). Falls back when preferred is unavailable.
         'mode' => env('MEDIA_ALT_VISION_MODE', 'auto'),
         'max_base64_bytes' => env('MEDIA_ALT_MAX_BASE64_BYTES', 1500000),
