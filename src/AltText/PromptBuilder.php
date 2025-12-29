@@ -8,8 +8,10 @@ class PromptBuilder
     {
         $tone = $config['prompt']['tone'] ?? 'neutral and descriptive';
         $maxWords = $config['prompt']['max_words'] ?? 20;
+        $custom = trim((string) ($config['prompt']['custom_instructions'] ?? ''));
+        $forceVerbatim = (bool) ($config['prompt']['force_verbatim_text'] ?? false);
 
-        $parentText = $context['parent']
+        $parentText = !empty($context['parent'])
             ? sprintf(
                 "Related content (%s): %s. Summary: %s.",
                 $context['parent']['type'],

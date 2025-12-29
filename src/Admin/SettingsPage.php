@@ -32,6 +32,14 @@ class SettingsPage
             wp_die(__('You do not have permission to access this page.', 'media-alt-suggester'));
         }
 
+        $updated = isset($_GET['updated']) ? sanitize_text_field(wp_unslash($_GET['updated'])) : '';
+        if ($updated === 'true') {
+            add_settings_error('media-alt-suggester', 'media-alt-suggester-updated', __('Settings updated.', 'media-alt-suggester'), 'updated');
+        } elseif ($updated === 'reset') {
+            add_settings_error('media-alt-suggester', 'media-alt-suggester-reset', __('Settings reset to defaults.', 'media-alt-suggester'), 'updated');
+        }
+        settings_errors('media-alt-suggester');
+
         $settings = $this->getSettings();
         $defaults = $this->defaultSettings();
 
@@ -114,7 +122,7 @@ class SettingsPage
 
         if (!empty($_POST['media_alt_suggester_reset'])) {
             delete_option(self::OPTION_KEY);
-            wp_safe_redirect(add_query_arg(['page' => 'media-alt-suggester', 'updated' => 'reset'], admin_url('options-general.php')));
+            wp_safe_redirect($this->redirectUrl('reset'));
             exit;
         }
 
@@ -137,8 +145,18 @@ class SettingsPage
 
         update_option(self::OPTION_KEY, $settings);
 
-        wp_safe_redirect(add_query_arg(['page' => 'media-alt-suggester', 'updated' => 'true'], admin_url('options-general.php')));
+        wp_safe_redirect($this->redirectUrl('true'));
         exit;
+    }
+
+    protected function redirectUrl(string $status): string
+    {
+        $referer = wp_get_referer();
+        if ($referer && false !== strpos($referer, 'page=40q-autonomy-ai-media-alt-suggester')) {
+            return add_query_arg(['updated' => $status], $referer);
+        }
+
+        return add_query_arg(['page' => 'media-alt-suggester', 'updated' => $status], admin_url('options-general.php'));
     }
 
     public function getSettings(): array
