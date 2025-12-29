@@ -51,7 +51,8 @@ class MediaAltSuggesterServiceProvider extends ServiceProvider
             add_action('admin_enqueue_scripts', [$this, 'enqueueAdminAssets']);
             add_action('add_attachment', [$this, 'primeSuggestion']);
             add_action('edit_attachment', [$this, 'primeSuggestion']);
-            (new SettingsPage())->hooks();
+            $this->app->make(SettingsPage::class)->hooks(false);
+
             add_action('admin_menu', [$this, 'registerHubMenu'], 20);
             add_action('admin_menu', [$this, 'removeHubDuplicateMenu'], 25);
             add_action('admin_menu', [$this, 'hideSettingsEntry'], 99);
@@ -238,25 +239,25 @@ class MediaAltSuggesterServiceProvider extends ServiceProvider
         $config = $this->app['config'];
         $prompt = $config->get('media-alt.prompt', []);
 
-        if (isset($settings['tone'])) {
+        if (!$this->envDefined('MEDIA_ALT_TONE') && isset($settings['tone'])) {
             $prompt['tone'] = $settings['tone'];
         }
-        if (isset($settings['max_words'])) {
+        if (!$this->envDefined('MEDIA_ALT_MAX_WORDS') && isset($settings['max_words'])) {
             $prompt['max_words'] = (int) $settings['max_words'];
         }
-        if (array_key_exists('custom_instructions', $settings)) {
+        if (!$this->envDefined('MEDIA_ALT_CUSTOM_INSTRUCTIONS') && array_key_exists('custom_instructions', $settings)) {
             $prompt['custom_instructions'] = (string) $settings['custom_instructions'];
         }
-        if (array_key_exists('force_verbatim_text', $settings)) {
+        if (!$this->envDefined('MEDIA_ALT_FORCE_VERBATIM_TEXT') && array_key_exists('force_verbatim_text', $settings)) {
             $prompt['force_verbatim_text'] = (bool) $settings['force_verbatim_text'];
         }
 
         $config->set('media-alt.prompt', $prompt);
 
-        if (array_key_exists('vision_enabled', $settings)) {
+        if (!$this->envDefined('MEDIA_ALT_VISION') && array_key_exists('vision_enabled', $settings)) {
             $vision = $config->get('media-alt.vision', []);
             $vision['enabled'] = (bool) $settings['vision_enabled'];
-            if (!empty($settings['vision_mode'])) {
+            if (!$this->envDefined('MEDIA_ALT_VISION_MODE') && !empty($settings['vision_mode'])) {
                 $vision['mode'] = $settings['vision_mode'];
             }
             $config->set('media-alt.vision', $vision);
@@ -393,5 +394,10 @@ class MediaAltSuggesterServiceProvider extends ServiceProvider
 JS;
 
         return str_replace('__SETTINGS__', $json, $script);
+    }
+
+    protected function envDefined(string $key): bool
+    {
+        return getenv($key) !== false;
     }
 }

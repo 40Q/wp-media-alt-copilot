@@ -7,9 +7,11 @@ class SettingsPage
     public const OPTION_KEY = 'media_alt_suggester_settings';
     public const NONCE_ACTION = 'media_alt_suggester_save';
 
-    public function hooks(): void
+    public function hooks(bool $registerOptionsPage = true): void
     {
-        add_action('admin_menu', [$this, 'registerPage']);
+        if ($registerOptionsPage) {
+            add_action('admin_menu', [$this, 'registerPage']);
+        }
         add_action('admin_post_media_alt_suggester_save', [$this, 'handleSave']);
     }
 

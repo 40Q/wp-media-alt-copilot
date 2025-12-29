@@ -1,10 +1,10 @@
 {
   "name": "40q/media-alt-suggester",
   "description": "Acorn package to suggest accessible image alt text using AI providers (OpenAI, Claude, etc).",
-  "type": "library",
+  "type": "acorn-package",
   "license": "MIT",
   "require": {
-    "php": "^8.2",
+    "php": "^8.3",
     "40q/autonomy-ai-hub": "*",
     "guzzlehttp/guzzle": "^7.0",
     "roots/acorn": "^5.0"
@@ -12,6 +12,11 @@
   "autoload": {
     "psr-4": {
       "FortyQ\\MediaAltSuggester\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "FortyQ\\MediaAltSuggester\\Tests\\": "tests/"
     }
   },
   "extra": {

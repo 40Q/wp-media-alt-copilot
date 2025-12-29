@@ -17,12 +17,14 @@ Acorn package that suggests accessible alt text for WordPress media items using 
    ```bash
    composer update 40q/media-alt-suggester
    ```
-3. Publish config if you want per-project overrides:
+3. Activate **40Q Autonomy AI Hub** (required) and **40Q Media Alt Suggester** in wp-admin → Plugins.
+4. Publish config if you want per-project overrides:
    ```bash
    wp acorn vendor:publish --tag=media-alt-config
    ```
 
 ## Configuration
+- Env-first: if env vars exist they win; otherwise values can be edited via the admin screen.
 
 Environment variables:
 ```
@@ -37,6 +39,8 @@ ANTHROPIC_MODEL=claude-3-5-sonnet-latest
 ```
 
 Config (`config/media-alt.php`) allows per-provider endpoints, models, and token budgets. `prompt.max_words` and `prompt.tone` control prompt guidance.
+
+Admin screen: settings live under Autonomy AI → Alt Text Copilot (hub required; standalone menu is not shown).
 
 ## Usage
 
